@@ -1,0 +1,28 @@
+name: Generate RDP Config
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Create RDP Credential
+        id: create
+        run: |
+          Add-Type -AssemblyName System.Security
+          $password = [System.Web.Security.Membership]::GeneratePassword(16,2)
+          $rdp = @{
+              username = "RDP"
+              password = $password
+          } | ConvertTo-Json
+          $rdp | Out-File -FilePath rdp.json
+          echo "::set-output name=RDP_FILE::rdp.json"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: rdp-config
+          path: rdp.json
