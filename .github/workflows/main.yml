@@ -1,4 +1,4 @@
-name: NON
+name: RDP
 
 on:
   workflow_dispatch:
@@ -6,10 +6,10 @@ on:
 jobs:
   secure-rdp:
     runs-on: windows-latest
-    timeout-minutes: 2600
+    timeout-minutes: 3600
 
     steps:
-      - name: Configure Core NON Settings
+      - name: Configure Core RDP Settings
         run: |
           # Enable Remote Desktop and disable Network Level Authentication (if needed)
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' `
@@ -100,7 +100,7 @@ jobs:
 
       - name: Maintain Connection
         run: |
-          Write-Host "`n=== NON ACCESS ==="
+          Write-Host "`n=== RDP ACCESS ==="
           Write-Host "Address: $env:TAILSCALE_IP"
           Write-Host "Username: RDP"
           Write-Host "Password: $(echo $env:RDP_CREDS)"
