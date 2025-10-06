@@ -12,14 +12,34 @@ jobs:
       - name: Create RDP Credential
         id: create
         run: |
-          Add-Type -AssemblyName System.Security
-          $password = [System.Web.Security.Membership]::GeneratePassword(16,2)
+          # สร้างชุดตัวอักษรสำหรับรหัสผ่าน
+          $charSet = @{
+              Upper   = [char[]](65..90)      # A-Z
+              Lower   = [char[]](97..122)     # a-z
+              Number  = [char[]](48..57)      # 0-9
+              Special = ([char[]](33..47) + [char[]](58..64) + [char[]](91..96) + [char[]](123..126)) # special
+          }
+
+          # สุ่มเลือกตัวอักษร
+          $rawPassword = @()
+          $rawPassword += $charSet.Upper | Get-Random -Count 4
+          $rawPassword += $charSet.Lower | Get-Random -Count 4
+          $rawPassword += $charSet.Number | Get-Random -Count 4
+          $rawPassword += $charSet.Special | Get-Random -Count 4
+
+          # ผสมตัวอักษรทั้งหมด
+          $password = -join ($rawPassword | Sort-Object { Get-Random })
+
+          # สร้าง JSON
           $rdp = @{
               username = "RDP"
               password = $password
           } | ConvertTo-Json
+
           $rdp | Out-File -FilePath rdp.json
-          echo "::set-output name=RDP_FILE::rdp.json"
+
+          # Output สำหรับ GitHub Actions
+          echo "RDP_FILE=rdp.json" >> $env:GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
