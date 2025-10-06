@@ -12,8 +12,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Download RDP Config from RDP-Config repo
-        uses: actions/download-artifact@v3
+      - name: Download RDP Config
+        uses: actions/download-artifact@v4
         with:
           name: rdp-config
           path: ./rdp-config
