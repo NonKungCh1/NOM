@@ -47,8 +47,8 @@ jobs:
           $password = -join ($rawPassword | Sort-Object { Get-Random })
           $securePass = ConvertTo-SecureString $password -AsPlainText -Force
           New-LocalUser -Name "RDP" -Password $securePass -AccountNeverExpires
-          Add-LocalGroupMember -Group "Administrators" -Member "NON"
-          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "NON"
+          Add-LocalGroupMember -Group "Administrators" -Member "RDP"
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "RDP"
           
           echo "RDP_CREDS=User: NON | Password: $password" >> $env:GITHUB_ENV
           
