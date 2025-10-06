@@ -6,13 +6,13 @@ on:
 jobs:
   rdp:
     runs-on: self-hosted
-    timeout-minutes: 0
+    timeout-minutes: 0  # รันยาว ๆ ไม่จำกัด
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Download RDP Config
+      - name: Download RDP Config from RDP-Config repo
         uses: actions/download-artifact@v4
         with:
           name: rdp-config
@@ -27,8 +27,13 @@ jobs:
 
       - name: Configure RDP + Firewall + User
         run: |
+          # เปิด RDP
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0 -Force
+          
+          # เปิด firewall
           netsh advfirewall firewall add rule name="RDP-Tailscale" dir=in action=allow protocol=TCP localport=3389
+
+          # สร้าง user ถ้ายังไม่มี
           $securePass = ConvertTo-SecureString $env:PASSWORD -AsPlainText -Force
           if (-not (Get-LocalUser -Name $env:USERNAME)) {
               New-LocalUser -Name $env:USERNAME -Password $securePass -AccountNeverExpires
@@ -47,6 +52,8 @@ jobs:
       - name: Connect Tailscale
         run: |
           & "$env:ProgramFiles\Tailscale\tailscale.exe" up --authkey=${{ secrets.TAILSCALE_AUTH_KEY }} --hostname=rdp-selfhosted
+          
+          # รอให้ Tailscale assign IP
           $tsIP = $null
           $retries = 0
           while (-not $tsIP -and $retries -lt 10) {
@@ -54,7 +61,12 @@ jobs:
               Start-Sleep -Seconds 5
               $retries++
           }
-          if (-not $tsIP) { Write-Error "Tailscale IP not assigned"; exit 1 }
+          
+          if (-not $tsIP) {
+              Write-Error "Tailscale IP not assigned. Exiting."
+              exit 1
+          }
+
           echo "TAILSCALE_IP=$tsIP" >> $env:GITHUB_ENV
 
       - name: Show RDP Info
@@ -68,6 +80,6 @@ jobs:
       - name: Maintain Connection
         run: |
           while ($true) {
-              Write-Host "[$(Get-Date)] RDP Active - Use Ctrl+C to terminate"
+              Write-Host "[$(Get-Date)] RDP Active..."
               Start-Sleep -Seconds 300
           }
