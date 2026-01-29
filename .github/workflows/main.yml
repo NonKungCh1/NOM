@@ -1,4 +1,4 @@
-name: NON
+name: NOM
 
 on:
   workflow_dispatch:
